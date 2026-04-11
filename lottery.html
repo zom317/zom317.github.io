@@ -138,12 +138,23 @@
                         return 0;
                     case "威力彩":
                         let m2 = player.special === drawn.special;
-                        if(m===6 && m2) return 200000000;
-                        if(m===6) return 20000000;
-                        if(m===3 && m2) return 400;
-                        return (m >= 3 || (m===1 && m2)) ? 100 : 0;
+                        if (m === 6 && s) return 200000000; // 頭獎
+                        if (m === 6) return 20000000;      // 貳獎
+                        if (m === 5 && s) return 150000;    // 參獎
+                        if (m === 5) return 20000;         // 肆獎
+                        if (m === 4 && s) return 4000;      // 伍獎
+                        if (m === 4) return 800;           // 陸獎
+                        if (m === 3 && s) return 400;       // 柒獎
+                        if (m === 3) return 200;           // 玖獎
+                        if (m === 2 && s) return 200;       // 捌獎
+                        if (m === 1 && s) return 100;       // 普獎
+                        return 0;
                     case "今彩539":
-                        return {5:8000000, 4:20000, 3:300, 2:50}[m] || 0;
+                        if (m === 5) return 8000000;
+                        if (m === 4) return 20000;
+                        if (m === 3) return 300;
+                        if (m === 2) return 50;
+                        return 0;
                     case "39樂合彩":
                         if(m === 4) return 212500;
                         if(m === 3) return 11250;
