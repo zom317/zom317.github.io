@@ -60,6 +60,7 @@
             ticketCount: 1,
             manualTicketCount: 1,
             lastResults: null,
+            selectedPrizeGame: null,
             betAmount: 50
         };
 
@@ -275,35 +276,31 @@
                                         </section>
         
                                         <section class="bg-white p-5 rounded-xl border shadow-sm">
-                                                <h3 class="font-bold text-lg text-indigo-600 mb-2">🎰 各遊戲簡介</h3>
-                                                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                                                        <div class="border-l-4 border-yellow-400 pl-3">
-                                                                <p class="font-bold">大樂透 / 威力彩</p>
-                                                                <p>台灣最熱門遊戲，獎金最高。威力彩需額外選擇第二區號碼。</p>
-                                                        </div>
-                                                        <div class="border-l-4 border-green-400 pl-3">
-                                                                <p class="font-bold">今彩539 / 樂合彩</p>
-                                                                <p>天天開獎，中獎率相對較高，適合穩紮穩打。</p>
-                                                        </div>
-                                                        <div class="border-l-4 border-blue-400 pl-3">
-                                                                <p class="font-bold">三星彩 / 四星彩</p>
-                                                                <p>需預測正確的數字與「順序」，非常考驗直覺。</p>
-                                                        </div>
-                                                        <div class="border-l-4 border-red-400 pl-3">
-                                                                <p class="font-bold">BINGO BINGO</p>
-                                                                <p>每 5 分鐘開獎一次，電腦模擬快速累積財富的好地方。</p>
-                                                        </div>
+                                                <h3 class="font-bold text-lg text-indigo-600 mb-4">🏆 查詢獎金規則</h3>
+                                                <p class="text-sm text-gray-500 mb-4">點擊下方按鈕查看各遊戲中獎條件：</p>
+                                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                                                        ${GAMES.map(g => `
+                                                                <button onclick="state.selectedPrizeGame='${g}'; render()" 
+                                                                        class="py-2 text-sm rounded-lg border ${state.selectedPrizeGame === g ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-50 text-gray-600 hover:bg-gray-100'} transition-colors">
+                                                                        ${g}
+                                                                </button>
+                                                        `).join('')}
+                                                </div>
+
+                                                <div id="prize-detail-area" class="mt-4">
+                                                        ${renderPrizeTable(state.selectedPrizeGame)}
                                                 </div>
                                         </section>
+        
                                         <section class="bg-amber-50 p-5 rounded-xl border border-amber-200">
                                                 <p class="text-sm text-amber-800">
-                                                        <strong>⚠️ 注意事項：</strong> 本網頁僅供模擬娛樂
-                                                    </p>
+                                                        <strong>⚠️ 注意事項：</strong> 本網頁僅供模擬娛樂使用，不具備真實博弈功能，請支持公益彩券，量力而為。
+                                                </p>
                                         </section>
                                 </div>
         
                                 <div class="text-center mt-8">
-                                        <button onclick="changeScreen('MAIN_MENU')" class="bg-gray-800 text-white px-10 py-3 rounded-full font-bold shadow-lg hover:bg-black transition-all">
+                                        <button onclick="state.selectedPrizeGame=null; changeScreen('MAIN_MENU')" class="bg-gray-800 text-white px-10 py-3 rounded-full font-bold shadow-lg hover:bg-black transition-all">
                                                 返回主選單
                                         </button>
                                 </div>
@@ -387,6 +384,34 @@
                     </div>
                 </div>
             `;
+        }
+        function renderPrizeTable(game) {
+                if (!game) return `<div class="text-center py-10 text-gray-400 bg-gray-50 rounded-xl">請選擇遊戲查看獎金</div>`;
+                
+                const tables = {
+                        "大樂透": [["01~49選六個號碼 + 系統自動分配一個隱藏號碼「特別號」", ""], ["6個號碼", "頭獎 1億"], ["5個+特別號", "200萬"], ["5個號碼", "5萬"], ["4個+特別號", "1.5萬"], ["3個+特別號", "1,000"], ["3個號碼", "400"]],
+                        "威力彩": [["01~38選六個號碼 + 01~08選一個號碼", ""], ["第一區6個+第二區", "頭獎 2億"], ["第一區6個", "2,000萬"], ["第一區3個+第二區", "400"], ["普獎", "100"]],
+                        "今彩539": [["01~39選五個號碼", ""], ["5個號碼", "800萬"], ["4個號碼", "2萬"], ["3個號碼", "300"], ["2個號碼", "50"]],
+                        "39樂合彩": [["01~39選五個號碼", ""], ["四合 (中4個)", "212,500"], ["三合 (中3個)", "11,250"], ["二合 (中2個)", "1,125"]],
+                        "49樂合彩": [["01~39選五個號碼", ""], ["四合 (中4個)", "200,000"], ["三合 (中3個)", "10,000"], ["二合 (中2個)", "1,000"]],
+                        "3星彩": [["選一個三位數", ""], ["數字與順序皆全中", "12,500"]],
+                        "4星彩": [["選一個四位數", ""], ["數字與順序皆全中", "125,000"]],
+                        "BINGO": [["中 10 號", "5,000"], ["中 5-9 號", "每號 500"]]
+                };
+
+                const data = tables[game] || [];
+                return `
+                        <div class="mt-4 overflow-hidden border rounded-lg">
+                                <table class="w-full text-sm">
+                                        <thead class="bg-indigo-50 text-indigo-800">
+                                                <tr><th class="p-2 text-left">中獎條件</th><th class="p-2 text-right">模擬獎金</th></tr>
+                                        </thead>
+                                        <tbody class="divide-y">
+                                                ${data.map(row => `<tr><td class="p-2 text-gray-600">${row[0]}</td><td class="p-2 text-right font-bold text-red-500">$${row[1]}</td></tr>`).join('')}
+                                        </tbody>
+                                </table>
+                        </div>
+                `;
         }
 
         function renderResults(container) {
