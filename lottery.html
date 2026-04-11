@@ -92,26 +92,23 @@
         };
 
         const LotteryLogic = {
-            draw(type, isPlayerAction = false) { // 增加一個參數區分是否為玩家機選
+            draw(type, isPlayerAction = false, manualCount = null) { 
+        // manualCount 用來指定機選要選幾個號碼
                 switch(type) {
                     case "大樂透":
                     case "49樂合彩":
-                        let b49 = this.sample(1, 49, 7);
-                        return {main: b49.slice(0, 6).sort((a,b)=>a-b), 
-                special: isPlayerAction ? null : b49[6] 
-            };
+                        let count49 = (type === "49樂合彩" && isPlayerAction) ? (manualCount || 2) : 7;
+                        let b49 = this.sample(1, 49, count49);
+                        return {
+                            main: (type === "49樂合彩" && isPlayerAction) ? b49.sort((a,b)=>a-b) : b49.slice(0, 6).sort((a,b)=>a-b), 
+                            special: (isPlayerAction || type === "49樂合彩") ? null : b49[6] 
+                        };
                     case "威力彩":
                         return { main: this.sample(1, 38, 6).sort((a,b)=>a-b), special: Math.floor(Math.random()*8)+1 };
                     case "今彩539":
                     case "39樂合彩":
-                        return { main: this.sample(1, 39, 5).sort((a,b)=>a-b), special: null };
-                    case "3星彩":
-                        return { main: [0,0,0].map(()=>Math.floor(Math.random()*10)), special: null };
-                    case "4星彩":
-                        return { main: [0,0,0,0].map(()=>Math.floor(Math.random()*10)), special: null };
-                    case "BINGO":
-                        let bingoFull = this.sample(1, 80, 20);
-                        return { main: [...bingoFull].sort((a,b)=>a-b), special: bingoFull[19] };
+                        let count39 = (type === "39樂合彩" && isPlayerAction) ? (manualCount || 2) : 5;
+                        return { main: this.sample(1, 39, count39).sort((a,b)=>a-b), special: null };
                 }
             },
             sample(min, max, count) {
@@ -366,13 +363,41 @@
                     </div>
                     <div class="w-72 bg-gray-50 p-5 border-l flex flex-col gap-5 rounded-r-xl">
                         <button onclick="changeScreen('MAIN_MENU')" class="w-full py-2 bg-white border rounded-lg font-bold hover:bg-gray-100 transition-colors">← 返回首頁</button>
-                        <div class="bg-white p-4 rounded-xl border">
-                            <label class="text-xs font-black text-gray-400 block mb-2">機選張數 (本次開獎)</label>
-                            <div class="flex items-center gap-2">
-                                <button onclick="adjust('ticketCount', -1)" class="bg-gray-100 w-8 h-8 rounded">-</button>
-                                <span class="flex-grow text-center font-bold text-indigo-600">${state.ticketCount}</span>
-                                <button onclick="adjust('ticketCount', 1)" class="bg-gray-100 w-8 h-8 rounded">+</button>
+                    
+                        <div class="bg-white p-4 rounded-xl border shadow-sm">
+                            <label class="text-xs font-black text-gray-400 block mb-2 uppercase tracking-wider">Quick Pick / 機選</label>
+                            
+                            ${["39樂合彩", "49樂合彩"].includes(state.selectedGame) ? `
+                                <div class="bg-indigo-50 border border-indigo-100 rounded-lg p-2 mb-3">
+                                    <p class="text-[11px] text-indigo-600 font-medium">
+                                        目前的模式：<span class="font-bold underline">${(state.playerSelection.length >= 2 && state.playerSelection.length <= 4) ? state.playerSelection.length : 2}合</span>
+                                    </p>
+                                    <p class="text-[9px] text-gray-400 mt-1">* 依上方自選球數自動判定</p>
+                                </div>
+                            ` : ''}
+                    
+                            <div class="flex items-center gap-2 mb-4">
+                                <button onclick="adjust('ticketCount', -1)" class="bg-gray-100 w-10 h-10 rounded-lg hover:bg-gray-200 font-bold">-</button>
+                                <span class="flex-grow text-center font-black text-xl text-indigo-600">${state.ticketCount}</span>
+                                <button onclick="adjust('ticketCount', 1)" class="bg-gray-100 w-10 h-10 rounded-lg hover:bg-gray-200 font-bold">+</button>
                             </div>
+
+                            <button onclick="addAutoToCart()" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-md text-sm">
+                                <i class="fas fa-magic mr-1"></i> 機選加入購物車
+                            </button>
+                        </div>
+
+                        <div class="mt-auto">
+                            <div class="mb-2 flex justify-between items-center px-1">
+                                <span class="text-xs font-bold text-gray-500">購物車內共：</span>
+                                <span class="text-sm font-black text-indigo-600">${state.cart.length} 注</span>
+                            </div>
+                            <button onclick="checkout()" class="w-full py-4 bg-gradient-to-br from-orange-500 to-red-600 text-white rounded-xl font-black shadow-lg hover:shadow-orange-200 active:scale-95 transition-all">
+                                確認結算 (共 $${(state.cart.length) * state.betAmount})
+                            </button>
+                        </div>
+                    </div>
+                    </div>
                         </div>
                         <div class="bg-white p-4 rounded-xl border">
                             <label class="text-xs font-black text-gray-400 block mb-2">自選張數</label>
@@ -492,6 +517,38 @@
                 </div>
             `;
         }
+        function addAutoToCart() {
+            // 1. 決定要機選幾個號碼 (pickCount)
+            let currentPickCount = state.playerSelection.length;
+            
+            if (["39樂合彩", "49樂合彩"].includes(state.selectedGame)) {
+                // 樂合彩限制：若沒選或選錯，預設機選 2 個號碼
+                currentPickCount = (currentPickCount >= 2 && currentPickCount <= 4) ? currentPickCount : 2;
+            } else if (state.selectedGame === "今彩539") {
+                currentPickCount = 5;
+            } else {
+                currentPickCount = 6; // 大樂透、威力彩
+            }
+        
+            // 2. 根據機選張數 (state.ticketCount) 產生號碼
+            for (let i = 0; i < state.ticketCount; i++) {
+                const autoDrawn = LotteryLogic.draw(state.selectedGame, true, currentPickCount);
+                
+                state.cart.push({
+                    type: state.selectedGame,
+                    nums: autoDrawn.main,
+                    special: autoDrawn.special,
+                    isAuto: true, // 標註這是機選，方便購物車顯示
+                    betType: autoDrawn.main.length // 紀錄是幾合
+                });
+            }
+        
+            showToast(`已機選 ${state.ticketCount} 張號碼加入購物車`);
+                
+            // 3. 重置狀態並更新畫面
+            state.ticketCount = 1; // 回到 1 張
+            render();
+        }
 
         // --- 防呆與核心邏輯 ---
         function toggleBall(n) {
@@ -559,64 +616,48 @@
         }
 
         function checkout() {
-            if(state.cart.length === 0 && state.ticketCount === 0) {
-                showToast("【防呆】請至少加入一張自選或設定機選張數");
+            if (state.cart.length === 0) {
+                showToast("購物車是空的喔！");
                 return;
             }
-
-            const totalTickets = state.cart.length + state.ticketCount;
-            const totalCost = totalTickets * state.betAmount;
-
-            if(state.wallet < totalCost) {
-                showToast(`【防呆】餘額不足！還缺 $${(totalCost - state.wallet).toLocaleString()}`);
+        
+            const totalCost = state.cart.length * state.betAmount;
+            if (state.wallet < totalCost) {
+                showToast("餘額不足！");
                 return;
             }
-
-            // 1. 生成機選並放入購物車
-            for(let i = 0; i < state.ticketCount; i++) {
-                // 呼叫抽獎邏輯產生隨機號碼，傳入 true 表示這是「玩家的機選票券」
-                let quickPickData = LotteryLogic.draw(state.selectedGame, true); 
-                state.cart.push({ 
-                type: state.selectedGame, 
-                nums: quickPickData.main, 
-                special: quickPickData.special 
-                });
-            }
-
-            // 2. 開獎池 (本期所有相關遊戲)
-            const drawnPool = {};
-            const activeGames = [...new Set(state.cart.map(t => t.type))];
-            activeGames.forEach(g => {
-            // 這裡不傳 true，代表這是「官方開獎號碼」，會產生大樂透/威力彩的特別號
-            drawnPool[g] = LotteryLogic.draw(g, false); 
-            });
-
-            // 3. 計算獎金
-            let totalWon = 0;
-            const ticketResults = state.cart.map(t => {
-                let prize = PrizeCalculator.calculate(t.type, t, drawnPool[t.type]);
-                totalWon += prize;
-                return { ...t, prize };
-            });
-
-            // 4. 更新錢包與狀態
-            state.wallet = state.wallet - totalCost + totalWon;
+        
+            // 直接取用購物車內容
+            let finalTickets = [...state.cart];
             
-            if(state.wallet > state.highScore) {
-                state.highScore = state.wallet;
-                Storage.saveScore(state.wallet);
-            }
+            // 執行開獎邏輯 (與之前相同)
+            const drawnPool = {};
+            const activeGames = [...new Set(finalTickets.map(t => t.type))];
+            activeGames.forEach(g => {
+                drawnPool[g] = LotteryLogic.draw(g, false);
+            });
 
-            state.lastResults = { tickets: ticketResults, totalCost, totalWon, drawnPool };
-            state.cart = []; // 買完清空
-            state.ticketCount = 1; 
+            // 對獎並計算獎金
+            let totalWon = 0;
+            finalTickets.forEach(t => {
+                t.prize = PrizeCalculator.calculate(t.type, t, drawnPool[t.type]);
+                totalWon += t.prize;
+            });
 
-            if(state.wallet <= 0) {
-                state.currentScreen = 'BANKRUPT';
-            } else {
-                state.currentScreen = 'RESULTS';
-            }
+            // 結算金額
+            state.wallet = state.wallet - totalCost + totalWon;
+            state.highScore = Math.max(state.highScore, state.wallet);
+            state.lastResults = {
+                tickets: finalTickets,
+                totalCost,
+                totalWon,
+                drawnPool
+            };
+
+            // 清空購物車
+            state.cart = [];
             render();
+            changeScreen('RESULTS');
         }
 
         function changeScreen(scr) {
