@@ -281,16 +281,15 @@
             } else if (state.currentScreen === 'RESULTS') {
                 renderResults(container);
             } else if (state.currentScreen === 'BANKRUPT') {
-                const pr = Storage.calculatePR(state.highScore);
-                container.innerHTML = `
-                    <div class="text-center mt-16 animate-bounce">
-                        <h1 class="text-8xl mb-6">💸</h1>
-                        <h2 class="text-4xl font-bold text-red-600 mb-2">您已破產！</h2>
-                        <p class="text-gray-500 mb-8">雖然沒錢了，但你曾經的最高紀錄 PR 值為: <span class="font-bold text-indigo-600">${pr}</span></p>
-                        <button onclick="resetGame()" class="bg-yellow-500 text-white text-xl px-12 py-4 rounded-full font-bold shadow-xl hover:scale-105 transition-transform">重新領取 $1000</button>
-                    </div>
-                `;
-            }
+        container.innerHTML = `
+            <div class="text-center mt-16 animate-bounce">
+                <h1 class="text-8xl mb-6">💸</h1>
+                <h2 class="text-4xl font-bold text-red-600 mb-2">您已破產！</h2>
+                <p class="text-gray-400 mb-8">挑戰失敗，請再接再厲。</p>
+                <button onclick="resetGame()" class="bg-yellow-500 text-white text-xl px-12 py-4 rounded-full font-bold shadow-xl hover:scale-105 transition-transform">重新領取 $1000</button>
+            </div>
+        `;
+    }
         }
 
         function renderGamePlay(container) {
@@ -513,7 +512,7 @@
             showToast(`已機選 ${state.ticketCount} 張號碼加入購物車`);
                 
             // 3. 重置狀態並更新畫面
-            state.ticketCount = 1; // 回到 1 張
+            state.ticketCount = 0; // 回到 0 張
             render();
         }
 
