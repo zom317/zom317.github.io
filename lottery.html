@@ -353,7 +353,16 @@
                             <button onclick="addAutoToCart()" class="w-full py-3 bg-indigo-600 text-white rounded-xl font-bold hover:bg-indigo-700 active:scale-95 transition-all shadow-md text-sm">
                                 <i class="fas fa-magic mr-1"></i> 機選加入購物車
                             </button>
-                        </div>
+                            </div>
+                                <div class="bg-white p-4 rounded-xl border">
+                                <label class="text-xs font-black text-gray-400 block mb-2">自選張數</label>
+                                <div class="flex items-center gap-2">
+                                    <button onclick="adjust('manualTicketCount', -1)" class="bg-gray-100 w-8 h-8 rounded">-</button>
+                                    <span class="flex-grow text-center font-bold text-green-600">${state.manualTicketCount}</span>
+                                    <button onclick="adjust('manualTicketCount', 1)" class="bg-gray-100 w-8 h-8 rounded">+</button>
+                                    </div>
+                            </div>
+                            <button onclick="addManualToCart()" class="w-full mt-3 py-2 bg-green-500 text-white rounded-lg text-sm font-bold hover:bg-green-600 transition-colors">加入購物車</button>
 
                         <div class="mt-auto">
                             <div class="mb-2 flex justify-between items-center px-1">
@@ -363,15 +372,7 @@
                         </div>
                     </div>
                     </div>
-                        </div>
-                        <div class="bg-white p-4 rounded-xl border">
-                            <label class="text-xs font-black text-gray-400 block mb-2">自選張數</label>
-                            <div class="flex items-center gap-2">
-                                <button onclick="adjust('manualTicketCount', -1)" class="bg-gray-100 w-8 h-8 rounded">-</button>
-                                <span class="flex-grow text-center font-bold text-green-600">${state.manualTicketCount}</span>
-                                <button onclick="adjust('manualTicketCount', 1)" class="bg-gray-100 w-8 h-8 rounded">+</button>
-                            </div>
-                            <button onclick="addManualToCart()" class="w-full mt-3 py-2 bg-green-500 text-white rounded-lg text-sm font-bold hover:bg-green-600 transition-colors">加入購物車</button>
+                        
                         </div>
                         <div class="mt-auto pt-4 border-t">
                             <div class="flex justify-between text-sm mb-2"><span>購物車張數:</span><span class="font-bold">${state.cart.length} 張</span></div>
