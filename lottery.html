@@ -183,16 +183,10 @@
         document.addEventListener('click', function() {
             if (!isMusicPlaying && bgm.paused) {
                 // 如果你希望第一次點擊就自動放音樂，可以取消下面這行的註解
-                // toggleMusic(); 
+                toggleMusic(); 
             }
         }, { once: true }); // 只執行一次
         
-        // 修改原本的 selectGame 函數，讓玩家點入遊戲時自動播音樂
-        const originalSelectGame = selectGame;
-        selectGame = function(game) {
-            if(!isMusicPlaying) toggleMusic();
-            originalSelectGame(game);
-        }
         function render() {
             const container = document.getElementById('screen-content');
             container.innerHTML = '';
