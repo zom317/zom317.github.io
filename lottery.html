@@ -46,7 +46,11 @@
     </style>
 </head>
 <audio id="bgm" loop>
-    <source src="bgm.mp3" type="audio/mpeg">
+    <source
+        src="%E8%83%8C%E6%99%AF%E9%9F%B3%E6%A8%82%20%E7%84%A1%E7%89%88%E6%AC%8A%E9%9F%B3%E6%A8%82%20%E5%85%8D%E8%B2%BB%E9%9F%B3%E6%A8%82%20BGM%E9%9F%B3%E6%A8%82%E4%B8%8B%E8%BC%89%20%E6%AD%8C%E5%90%8D_%20Sunset%20Paradise%20%20%E4%BD%9C%E8%80%85_%20Wonki%20%20%E8%BC%95%E5%BF%AB%20%20%20NCS%20Music.mp3"
+        type="audio/mpeg">
+    <source src="背景音樂 無版權音樂 免費音樂 BGM音樂下載 歌名_ Sunset Paradise  作者_ Wonki  輕快   NCS Music.mp3" type="audio/mpeg">
+    <source src="https://cdn.pixabay.com/download/audio/2022/05/27/audio_1808fbf07a.mp3" type="audio/mpeg">
     您的瀏覽器不支援音訊播放。
 </audio>
 
@@ -60,10 +64,11 @@
                 <div class="font-bold text-xl">錢包餘額: <span id="wallet-display">$1000</span></div>
                 <div class="text-xs opacity-70">最高紀錄: <span id="high-score-display">$1000</span></div>
             </div>
-            <div class="text-right">
+            <div class="hidden sm:block text-right">
                 <div class="text-sm opacity-80 font-bold">TAIWAN LOTTERY SIMULATOR</div>
             </div>
-            <button id="music-toggle" onclick="toggleMusic()" class="bg-indigo-500 hover:bg-indigo-400 p-2 rounded-full transition-colors">
+            <button id="music-toggle" onclick="toggleMusic()"
+                class="bg-indigo-500 hover:bg-indigo-400 p-2 rounded-full transition-colors">
                 <span id="music-icon">🔇</span>
             </button>
         </div>
@@ -211,52 +216,32 @@
             document.getElementById('wallet-display').innerText = `$${state.wallet.toLocaleString()}`;
             document.getElementById('high-score-display').innerText = `$${state.highScore.toLocaleString()}`;
         }
-        // --- 超級程式王：音樂控制優化版 ---
+        // --- 音樂控制邏輯 ---
         const bgm = document.getElementById('bgm');
         const musicIcon = document.getElementById('music-icon');
         let isMusicPlaying = false;
 
-        // 設置初始音量，避免使用者被嚇到
+        // 設置初始音量 (0.0 到 1.0)
         bgm.volume = 0.3;
 
         function toggleMusic() {
             if (isMusicPlaying) {
                 bgm.pause();
                 musicIcon.innerText = '🔇';
-                isMusicPlaying = false;
             } else {
-                // 使用 Promise 處理播放請求，這是現代瀏覽器的標準做法
-                const playPromise = bgm.play();
-                
-                if (playPromise !== undefined) {
-                    playPromise.then(() => {
-                        musicIcon.innerText = '🎵';
-                        isMusicPlaying = true;
-                    }).catch(error => {
-                        // 捕獲因自動播放政策被封鎖的錯誤
-                        console.error("音樂播放失敗：", error);
-                        showToast("請點擊頁面任何地方以啟用音樂");
-                    });
-                }
+                bgm.play().catch(e => console.log("等待使用者互動以播放音樂"));
+                musicIcon.innerText = '🎵';
             }
+            isMusicPlaying = !isMusicPlaying;
         }
 
-        // 核心修正：處理瀏覽器 Autoplay 政策
-        // 當使用者第一次點擊頁面任何地方，嘗試解除音訊鎖定
-        function initAudio() {
-            // 建立一個一次性的事件監聽
-            document.addEventListener('click', function() {
-                // 如果目前沒在放，且原本是關閉狀態，嘗試預熱音訊
-                if (!isMusicPlaying) {
-                    // 這裡可以選擇自動播放，或僅僅是準備好 audio context
-                    // 為了好的使用者體驗，我們在第一次點擊時主動播放
-                    toggleMusic();
-                }
-            }, { once: true });
-        }
-
-        // 在頁面載入後初始化
-        window.addEventListener('load', initAudio);
+        // 增強：當玩家點擊畫面任何地方，如果音樂還沒開，就幫他開（解決瀏覽器政策）
+        document.addEventListener('click', function () {
+            if (!isMusicPlaying && bgm.paused) {
+                // 如果你希望第一次點擊就自動放音樂，可以取消下面這行的註解
+                toggleMusic();
+            }
+        }, { once: true }); // 只執行一次
 
         function render() {
             const container = document.getElementById('screen-content');
@@ -265,16 +250,16 @@
 
             if (state.currentScreen === 'MAIN_MENU') {
                 container.innerHTML = `
-                    <div class="flex flex-row w-full h-full gap-6 px-4">
+                    <div class="flex flex-col md:flex-row w-full h-full gap-6 px-4 overflow-y-auto md:overflow-hidden pb-10">
                         <!-- Left Layout -->
-                        <div class="flex-grow flex flex-col items-center mt-4 overflow-y-auto pr-2 scroll-container">
-                            <h1 class="text-4xl font-bold mb-8">台灣公益彩券模擬</h1>
+                        <div class="flex-grow flex flex-col items-center mt-4 md:overflow-y-auto pr-2 scroll-container w-full">
+                            <h1 class="text-4xl font-bold mb-8 text-center">台灣公益彩券模擬</h1>
                             
-                            <div class="grid grid-cols-2 gap-4 max-w-xl w-full mx-auto mb-8">
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-xl w-full mx-auto mb-8">
                                 ${GAMES.map(g => `<button onclick="selectGame('${g}')" class="bg-white hover:bg-indigo-50 border-2 border-indigo-100 p-4 rounded-2xl font-black text-xl shadow-md transition-all active:scale-95">${g}</button>`).join('')}
                             </div>
                             
-                            <div class="flex justify-center gap-4 mb-8">
+                            <div class="flex flex-col sm:flex-row justify-center gap-4 mb-8 w-full">
                                 <button onclick="checkout()" class="bg-amber-500 text-white px-8 py-3 rounded-full font-black text-xl shadow-xl hover:bg-amber-600 active:scale-95">確定購買 (共 $${state.cart.reduce((s, t) => s + (["3星彩", "4星彩"].includes(t.type) ? 25 : 50), 0)})</button>
                                 <button onclick="changeScreen('RULES')" class="bg-green-500 text-white px-8 py-3 rounded-full font-black text-xl shadow-xl hover:bg-green-600 active:scale-95">玩法介紹</button>
                             </div>
@@ -308,10 +293,10 @@
                         </div>
 
                         <!-- Right Column: Quiz -->
-                        <div class="w-80 flex-shrink-0 bg-white rounded-2xl border-2 border-indigo-100 shadow-sm overflow-hidden h-[95%] mt-4 flex flex-col relative text-left">
+                        <div class="w-full md:w-80 flex-shrink-0 bg-white rounded-2xl border-2 border-indigo-100 shadow-sm overflow-hidden h-[600px] md:h-[95%] mt-4 flex flex-col relative text-left mb-8 md:mb-0">
                             <div class="bg-indigo-50 border-b border-indigo-100 py-3 px-4 shadow-sm flex-shrink-0 flex justify-between items-center">
-                                <h3 class="font-bold text-sm text-indigo-800 flex items-center"><span class="mr-2">📝</span> 彩券知識測驗</h3>
-                                <span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded">最高可得500元</span>
+                                <h3 class="font-bold text-sm text-indigo-800 flex items-center"><span class="mr-2">📝</span> 彩券測驗</h3>
+                                <span class="text-xs font-bold text-red-600 bg-red-100 px-2 py-1 rounded">可得最高500元</span>
                             </div>
                             <div class="flex-grow w-full h-full overflow-y-auto scroll-container p-4 bg-gray-50 text-sm">
                                 ${state.quizCompleted ? `
@@ -483,22 +468,22 @@
                     </div>
                 `;
             } else {
-                ballHtml = `<div class="grid grid-cols-10 gap-2 mb-6">${Array.from({ length: maxBalls }, (_, i) => i + 1).map(n => `<div onclick="toggleBall(${n})" class="ball w-10 h-10 flex items-center justify-center border-2 rounded-full font-bold text-sm ${state.playerSelection.includes(n) ? 'ball-selected' : 'bg-white border-gray-200'}">${n}</div>`).join('')}</div>`;
+                ballHtml = `<div class="flex justify-center flex-wrap sm:grid sm:grid-cols-7 md:grid-cols-10 gap-2 mb-6">${Array.from({ length: maxBalls }, (_, i) => i + 1).map(n => `<div onclick="toggleBall(${n})" class="ball w-10 h-10 flex items-center justify-center border-2 rounded-full font-bold text-sm ${state.playerSelection.includes(n) ? 'ball-selected' : 'bg-white border-gray-200'}">${n}</div>`).join('')}</div>`;
             }
 
             container.innerHTML = `
-                <div class="flex h-full gap-6">
-                    <div class="flex-grow">
+                <div class="flex flex-col md:flex-row h-full gap-6 overflow-y-auto md:overflow-hidden pb-10 md:pb-0">
+                    <div class="flex-grow md:overflow-y-auto w-full">
                         <h2 class="text-2xl font-bold mb-4">投注遊戲: <span class="text-indigo-600">${state.selectedGame}</span></h2>
                         ${ballHtml}
                         ${state.selectedGame === "威力彩" ? `
-                            <div class="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl">
+                            <div class="mt-6 p-4 bg-red-50 border border-red-100 rounded-xl mb-4">
                                 <h3 class="font-bold mb-2 text-red-700">第二區 (1-8):</h3>
-                                <div class="flex gap-2">${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<div onclick="state.playerSpecial = ${n}; render()" class="ball w-10 h-10 flex items-center justify-center border-2 rounded-full font-bold ${state.playerSpecial === n ? 'bg-red-500 text-white border-red-700' : 'bg-white'}">${n}</div>`).join('')}</div>
+                                <div class="flex flex-wrap justify-center sm:justify-start gap-2">${[1, 2, 3, 4, 5, 6, 7, 8].map(n => `<div onclick="state.playerSpecial = ${n}; render()" class="ball w-10 h-10 flex items-center justify-center border-2 rounded-full font-bold ${state.playerSpecial === n ? 'bg-red-500 text-white border-red-700' : 'bg-white'}">${n}</div>`).join('')}</div>
                             </div>
                         ` : ''}
                     </div>
-                    <div class="w-72 bg-gray-50 p-5 border-l flex flex-col gap-5 rounded-r-xl">
+                    <div class="w-full md:w-72 md:flex-shrink-0 bg-gray-50 p-5 md:border-l border-t md:border-t-0 flex flex-col gap-5 rounded-b-xl md:rounded-r-xl">
                         <button onclick="changeScreen('MAIN_MENU')" class="w-full py-2 bg-white border rounded-lg font-bold hover:bg-gray-100 transition-colors">← 返回首頁</button>
                     
                         <div class="bg-white p-4 rounded-xl border shadow-sm">
@@ -578,7 +563,7 @@
             container.innerHTML = `
                 <div class="mb-6">
                     <h2 class="text-2xl font-bold mb-4">本期開獎結果</h2>
-                    <div class="grid grid-cols-3 gap-4 mb-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                         <div class="bg-white p-4 rounded-xl border shadow-sm text-center">
                             <p class="text-xs text-gray-400">總成本</p>
                             <p class="text-lg font-bold">$${totalCost.toLocaleString()}</p>
@@ -832,35 +817,37 @@
             const form = e.target;
             // 答案清單
             const answers = {
-                q1: ['B'], q2: ['B'], q3: ['C'], q4: ['A', 'C', 'D'], q5: ['A'], 
+                q1: ['B'], q2: ['B'], q3: ['C'], q4: ['A', 'C', 'D'], q5: ['A'],
                 q6: ['A'], q7: ['B'], q8: ['B'], q9: ['A', 'B', 'C', 'E'], q10: ['A', 'C', 'D']
             };
-            
+
             let correctCount = 0;
             for (let i = 1; i <= 10; i++) {
                 const qName = `q${i}`;
                 const inputs = form.querySelectorAll(`input[name="${qName}"]:checked`);
                 const userAns = Array.from(inputs).map(inp => inp.value).sort();
                 const correctAns = answers[qName].sort();
-                
+
                 // 比對是否完全正確
                 if (userAns.length === correctAns.length && userAns.every((v, idx) => v === correctAns[idx])) {
                     correctCount++;
                 }
             }
-            
+
             const bonus = correctCount * 50;
             state.wallet += bonus;
             state.highScore = Math.max(state.highScore, state.wallet);
             state.quizCompleted = true;
             localStorage.setItem('lottery_quiz_completed', 'true');
-            
+
             showToast(`結算：答對了 ${correctCount} 題，獲得 $${bonus} 元！`);
             render();
         }
 
         Storage.load();
         render();
+        Storage.load(); // 1. 載入最高分紀錄
+        render();       // 2. 啟動畫面渲染
     </script>
 </body>
 
