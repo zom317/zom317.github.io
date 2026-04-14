@@ -224,24 +224,27 @@
         // 設置初始音量 (0.0 到 1.0)
         bgm.volume = 0.3;
 
-        function toggleMusic() {
+       function toggleMusic() {
             if (isMusicPlaying) {
                 bgm.pause();
                 musicIcon.innerText = '🔇';
+                isMusicPlaying = false;
             } else {
-                bgm.play().catch(e => console.log("等待使用者互動以播放音樂"));
-                musicIcon.innerText = '🎵';
+                // 使用 Promise 處理播放請求，這是現代瀏覽器的標準做法
+                const playPromise = bgm.play();
+                
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        musicIcon.innerText = '🎵';
+                        isMusicPlaying = true;
+                    }).catch(error => {
+                        // 捕獲因自動播放政策被封鎖的錯誤
+                        console.error("音樂播放失敗：", error);
+                        showToast("請點擊頁面任何地方以啟用音樂");
+                    });
+                }
             }
-            isMusicPlaying = !isMusicPlaying;
         }
-
-        // 增強：當玩家點擊畫面任何地方，如果音樂還沒開，就幫他開（解決瀏覽器政策）
-        document.addEventListener('click', function () {
-            if (!isMusicPlaying && bgm.paused) {
-                // 如果你希望第一次點擊就自動放音樂，可以取消下面這行的註解
-                toggleMusic();
-            }
-        }, { once: true }); // 只執行一次
 
         function render() {
             const container = document.getElementById('screen-content');
